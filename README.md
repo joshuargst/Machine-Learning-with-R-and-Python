@@ -4,4 +4,4 @@ Repository to showcase the use of different machine learning tools and algorithm
 
 
 Recommender Systems:
-<https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Recommender%20Systems/R/RecommenderSystems.md>[Recommender Systems with R]
+[Recommender Systems with R](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Recommender%20Systems/R/RecommenderSystems.md)
