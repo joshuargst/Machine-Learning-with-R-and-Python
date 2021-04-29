@@ -338,5 +338,4 @@ table_top %>%
 
 <img src="RecommenderSystems_files/figure-gfm/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
 
-![Top Recommended
-Jokes](C:/Users/REGISTEJH/Documents/GitHub/Machine-Learning%20with%20R%20and%20Python/Recommender%20Systems/R/Recommended_jokes.png)
+<img src="RecommenderSystems_files/figure-gfm/Recommended_jokes.png" style="display: block; margin: auto;" />
