@@ -1,15 +1,14 @@
 Want to Hear A Joke?
 ================
-Author: Joshua Registe
+**Author: Joshua Registe**
 
 ## Recommender System
 
 Skip to the end for spoiler on most recommended jokes. This document
 will present a high-level overview on the implementation of recommender
-systems. The recommender systems that will be evaluated in this document
-are:
+systems. The raw code for this document can be found here: [RecommenderSystems.Rmd](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Recommender%20Systems/R/RecommenderSystems.Rmd). The recommender systems that will be evaluated in this document are:
 
-1.  **Item-Based Collaborative Filtering (IBCF)**
+1.  **Item-Based Collaborative Filtering (IBCF)** :shopping_cart::shopping_cart:
     -   IBCF is a method that looks at similarities between items
         (movies) and makes recommendations. The algorithm considers
         user’s purchases (items) and recommends similar items and the
@@ -19,7 +18,7 @@ are:
         recommendations based on user purchase history. The results of
         the top 20 most recommended movies are shown in the following
         figure.
-2.  **User-Based Collaborative Filtering (UBCF)**
+2.  **User-Based Collaborative Filtering (UBCF)** :family_woman_woman_boy_boy:
     -   UBCF is a method that looks at similarities between users and
         makes recommendations to users based on this similarity. The
         algorithm measures how similar each user is to another and a
@@ -34,7 +33,7 @@ are:
         (“Collaborative” refers to the notion that users or items
         collaborate with each other via similarities that are defined in
         the models to come up with new recommendations.)
-3.  **Singular Vector Decomposition (SVD)**
+3.  **Singular Vector Decomposition (SVD)** :heavy_multiplication_x::heavy_division_sign:
     -   Singular value decomposition (SVD) is a common dimensionality
         reduction technique that identifies latent semantic factors for
         retrieving information. Some of the difficulties associated with
@@ -43,7 +42,7 @@ are:
         filling huge matrices with missing values can often be expensive
         or even misleading. Regularization models (penalty-based error
         minimizing) can assist with this.
-4.  **Alternative Least Squares (ALS)**
+4.  **Alternative Least Squares (ALS)** :black_large_square::black_medium_square::black_medium_small_square:
     -   Alternative Least Squares algorith factorizes a matrix into two
         factors such that the original matrix is approximately equal to
         the transpose of the first factor matrix multiplied by the
