@@ -4,8 +4,8 @@ Want to Hear A Joke?
 
 ## Outline:
 
-[Recommender System](##Recommender System)
-
+[Recommender System](##Recommender-System)  
+[Dataset Setup](##Dataset-and-Setup)
 
 ## Recommender System
 
