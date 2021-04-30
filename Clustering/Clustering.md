@@ -1,4 +1,4 @@
-Cluster Analysis with R
+Cluster Analysis With R
 ================
 Author - Joshua Registe
 
