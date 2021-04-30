@@ -4,9 +4,9 @@ Want to Hear A Joke?
 
 ## Outline:
 
-[Recommender System](##Recommender-System)  
-[Dataset Setup](##Dataset-and-Setup)
-
+[Recommender System](#Recommender-System)  
+[Dataset Setup](#Dataset-and-Setup)
+[Dataset Setup](#Process-and-Goal)
 ## Recommender System
 
 Skip to the end for spoiler on most recommended jokes. This document
