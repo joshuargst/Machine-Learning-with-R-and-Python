@@ -14,19 +14,13 @@ knitr::opts_chunk$set(
 packages <- c(
   'tidyverse', 
   'corrplot', 
-  #'class',
   'naniar',
   'DataExplorer',
-  'caret',
   'tidymodels',
-  #'themis',
-  #'car',
-  #'xgboost',
   'readr',
   'factoextra',
   'cluster',
   'gridExtra'
-  #"MachineShop"
 )
 for (pkg in packages) {
   suppressPackageStartupMessages(suppressWarnings(
