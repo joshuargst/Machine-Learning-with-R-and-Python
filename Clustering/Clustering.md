@@ -4,6 +4,8 @@ Author - Joshua Registe
 
 ## Outline
 
+[RMarkdown Source Code](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Clustering/Clustering.Rmd)
+
 -   [Clustering Intro](#Clustering)  
 -   [Data Exploration](#Data-Exploration)  
 -   [Data Prep](#Data-preparation)  
