@@ -369,7 +369,7 @@ those variables.
 ADHD_Cleaned<- ADHD_Recipe %>%  bake(ADHD_data)
 ```
 
-##K-means
+## K-means
 
 -   [Return to Outline](#Outline)
 
