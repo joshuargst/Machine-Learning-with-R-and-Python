@@ -2,6 +2,11 @@ Want to Hear A Joke?
 ================
 **Author: Joshua Registe**
 
+## Outline:
+
+[Recommender System](## Recommender System)
+
+
 ## Recommender System
 
 Skip to the end for spoiler on most recommended jokes. This document
