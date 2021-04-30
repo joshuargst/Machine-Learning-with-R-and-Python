@@ -4,7 +4,8 @@ Author - Joshua Registe
 
 ## Outline
 
-[RMarkdown Source Code](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Clustering/Clustering.Rmd)
+[RMarkdown Source
+Code](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Clustering/Clustering.Rmd)
 
 -   [Clustering Intro](#Clustering)  
 -   [Data Exploration](#Data-Exploration)  
@@ -98,7 +99,7 @@ project. All identifying information of the dataset is removed. The data
 contains 54 variables with 175 observations per variable. Every variable
 in the dataset is imported in as numeric features with the exception of
 `Initial` which will not be used as part of any exploration or analysis.
-Below
+Below provides a summary of the data.
 
 ``` r
 ADHD_data<-read_csv("ADHD_data.csv")
@@ -187,13 +188,13 @@ Data summary
 
 After observing the data’s structure, the next step was to plot the data
 to assess how this data is portrayed and what observations we can make
-about the distributions involved in the dataset. Based on the
-histrograms plotted below, we can note that there are many observations
-although numeric, behave as categorical features and this will need to
-be assessed when performing the kmeans clustering analysis. There does
-not seem to be any clear distinguishable outliers however there does
-seem to be some features that experience low variance such `Stimulants`
-where majority of the recorded observations are 0.
+about the distributions involved in the dataset. Based on the histograms
+plotted above, we can note that there are many observations although
+numeric, behave as categorical features (survey questions) and this will
+need to be assessed when performing the kmeans clustering analysis.
+There does not seem to be any clear distinguishable outliers however
+there does seem to be some features that experience low variance such
+`Stimulants` where majority of the recorded observations are 0.
 
 To reduce noise and complexity of the dataset prior to modeling,
 multi-colinearity (if it exists) should be addressed. The dataset was
@@ -332,12 +333,13 @@ reasons are provided below
 ADHD_Recipe<-ADHD_data %>% recipe(~.) %>% 
   step_rm(Initial, Psych_meds.) %>% 
   step_rm(contains("total")) %>% 
+  step_naomit(Suicide) %>%
   step_impute_knn(all_predictors()) %>% 
   step_mutate_at(-Age, fn = ~ as.factor(.)) %>% 
-  step_dummy(all_nominal(), one_hot = T) %>% 
-  step_normalize(all_predictors()) %>%
-  step_nzv(all_predictors()) %>% 
-  step_corr(all_predictors()) %>% 
+  step_dummy(all_nominal(), -Suicide, one_hot = T) %>% 
+  step_normalize(all_numeric()) %>%
+  step_nzv(all_numeric()) %>% 
+  step_corr(all_numeric()) %>% 
   prep() #%>% 
 
 ADHD_Recipe 
@@ -356,6 +358,7 @@ ADHD_Recipe
     ## 
     ## Variables removed Initial, Psych_meds. [trained]
     ## Variables removed ADHD_Total, MD_TOTAL [trained]
+    ## Removing rows with NA values in Suicide
     ## K-nearest neighbor imputation for Sex, Race, ADHD_Q1, ADHD_Q2, ADHD_Q3, ... [trained]
     ## Variable mutation for Sex, Race, ADHD_Q1, ADHD_Q2, ... [trained]
     ## Dummy variables from Sex, Race, ADHD_Q1, ADHD_Q2, ADHD_Q3, ADHD_Q4, ... [trained]
@@ -368,7 +371,8 @@ following table was produced with 147 variables and 175 observations of
 those variables.
 
 ``` r
-ADHD_Cleaned<- ADHD_Recipe %>%  bake(ADHD_data)
+ADHD_Cleaned<- ADHD_Recipe %>%  bake(ADHD_data) %>% 
+  select(-Suicide)
 ```
 
 ## K-means
@@ -420,12 +424,13 @@ will be used to see what these clusters truly look like. Below shows
 several plots of k values from 0-9 and assessing how well the clusters
 are defined in each. In the figure below, we notice that the k-values of
 2, 3, and 4 do well to separate our unknown features and can be used as
-an appropriately selected k-value. It is likely that the segmentation
-into two groups defines individuals who do and do not have ADHD. With
-unsupervised learning, it is typically unknown what the clusters
-represent and a deeper dive into the information within each cluster is
-necessary to make that determination. This document will not dive into
-the specifics of each cluster arrangement.
+an appropriately selected k-value. With unsupervised learning, it is
+typically unknown what the clusters represent and a deeper dive into the
+information within each cluster is necessary to make that determination,
+Exercises like this may lead to clusters that help identify how to treat
+certain groups, maybe those who are likely to commit suicide vs. those
+who are not. This document will not dive into the specifics of each
+cluster arrangement.
 
 ``` r
 set.seed(2)
@@ -483,7 +488,7 @@ gridExtra::grid.arrange(A2,A3,A4,A5,A6,A7, ncol = 3)
 ## Hierarchical Clustering
 
 -   [Return to Outline](#Outline)
-  
+
 Hierarchical is the next and final algorithm that is tested using the
 same transformed ADHD dataset. Two options are typically explored for
 the distances calculated in k-mediods, `euclidian` and `manhattan`. We
