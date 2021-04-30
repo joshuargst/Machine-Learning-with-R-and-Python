@@ -1,0 +1,199 @@
+---
+title: "Dimensionality"
+author: "Joshua Registe"
+date: "4/29/2021"
+output: github_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  warning = FALSE, 
+  message = FALSE,
+  cache = TRUE)
+
+packages <- c(
+  'tidyverse', 
+  'corrplot', 
+  #'class',
+  'naniar',
+  'DataExplorer',
+  'caret',
+  'tidymodels',
+  #'themis',
+  #'car',
+  #'xgboost',
+  "readr",
+  "factoextra"
+  #"MachineShop"
+)
+     
+for (pkg in packages) {
+  suppressPackageStartupMessages(suppressWarnings(
+    library(
+      pkg, character.only = TRUE, 
+      warn.conflicts = FALSE, quietly = TRUE)
+  ))
+}
+
+# A ggplot2 function
+defaulttheme <- theme(
+  panel.background = element_blank(),
+  panel.border = element_rect(color = "black", fill = NA))
+```
+
+## Dimensionality
+
+The following document will discuss some processes of dimensionality reduction for datasets. **Why Reduce dimensions?** There are many benefits to reducing the dimensionality of a dataset including:  
+
+- Discover hidden correlations/topics  
+
+- Information that can be described as a combination rather than independently  
+
+- Remove redundant and noisy features. not all words may be relevant in a tf-idf, or not all columns may be necessary in a user-item matrix  
+
+- Interpretation and Visualization  
+
+- Easier storage and processing of the data
+
+
+The dimensionality reduction techniques presented in this document will showcase the implementation of:
+
+
+**1. Singular Value Decomposition**
+
+**2. Principal Component Analysis**
+
+**3. Independent Component Analysis**
+
+**4. Partial Least Squares**
+
+**5. Linear Discriminant Analysis**
+
+
+## Data Exploration
+
+
+The first thing we will do for this assignment is explore the dataset provided. This dataset is a mental health dataset from a real-life research project. All identifying information of the dataset was removed and the data dictionary provides an explanation of each of the variables. The data contains 54 variables with 175 observations per variable. Every variable in the dataset is imported in as numeric features with the exception of `Initial` which will not be used as part of any exploration or analysis.
+
+```{r}
+
+ADHD_data<-read_csv("ADHD_data.csv")
+names(ADHD_data)<-str_replace_all(names(ADHD_data)," +","_")
+names(ADHD_data)<-str_replace_all(names(ADHD_data),"-","_")
+
+head(skimr::skim(ADHD_data))
+
+```
+
+After observing the data's structure, the next step was to plot the data to assess how this data is portrayed and what observations we can make about the distributions involved in the dataset. Based on the histrograms plotted below, we can note that there are many observations although numeric, behave as categorical features and should be treated as such as they are responses to survey questions. This will need to be considered when performing any evaluation. There does not seem to be any clear distinguishable outliers however there does seem to be some features that experience low variance such `Stimulants` where majority of the recorded observations are 0.
+
+```{r}
+plot_histogram(ADHD_data)
+
+```
+
+Assessing correlations will be important for the models to come because some dimensionality reduction techniques such as PCA are particularly sensitive to multi-colinearity and in order to reduce noise and complexity of the dataset prior to modeling, multi-colinearity (if it exists) should be addressed. The dataset was assessed for pairwise spearman correlations which measures data for it's monotonicity providing a regression coefficient that defines both linear and non-linear trends. the table below shows we do exhibit correlations particularly amongst features that are directly related such as the `ADHDQ#` to the `ADHD_Total`. Highest measured spearman rank was around 0.79.
+
+```{r}
+NumericADHD<-ADHD_data %>% 
+  select(-Initial)
+
+ADHD_cors<-
+  bind_rows(
+    #pearson correlation of numeric features
+    NumericADHD %>% 
+      cor(method = "pearson", use = "pairwise.complete.obs") %>% as.data.frame() %>% 
+      rownames_to_column(var = "x") %>% 
+      pivot_longer(cols = -x, names_to = "y", values_to = "correlation") %>% 
+      mutate(cor_type = "pearson"),
+    #spearman (monotonic) correlations of numeric features
+    NumericADHD %>% 
+      cor(method = "spearman", use = "pairwise.complete.obs") %>% as.data.frame() %>% 
+      rownames_to_column(var = "x") %>% 
+      pivot_longer(cols = -x, names_to = "y", values_to = "correlation") %>% 
+      mutate(cor_type = "spearman")
+  )
+
+ADHD_cors %>% 
+  filter(!(x ==y)) %>% 
+  filter(cor_type=="spearman") %>% 
+  distinct(correlation,.keep_all = T) %>% 
+  arrange(-correlation) %>% #top_n(10, correlation) %>% 
+  distinct(x, .keep_all = T) %>% 
+  head()
+
+  
+```
+
+Next, we want to assess any missing data within the dataset. The models presented here are also susceptible to missing data and this must be treated accordingly. The figure below displays a plot of missing data by percentage of observations in the dataset. It is clear that the feature `Psych_meds.` has a significant amount of features that are inappropriate to impute or include and thus this feature will be removed from the dataset prior to any models.
+
+```{r}
+
+ADHD_data %>%  naniar::miss_var_summary() %>% 
+  slice_max(n_miss, n = 10) %>% 
+  ggplot(aes( x = fct_reorder(variable, n_miss), y = pct_miss))+
+  coord_flip()+
+  geom_col(alpha = 0.5, fill = "skyblue3", color = "darkblue")+
+  defaulttheme+
+  labs(title = "Top Features with Missing Data",
+       y = "Percent Missing",
+       x = "Feature")
+
+
+
+```
+
+
+
+## Data preparation 
+
+For the Data preparation following baseline steps were made and the reasons are provided below
+
+-   **Remove `Initial`**: Character value that identifies patient with which will provide no bearing on the model output
+
+-   **Removal `Psych_meds.`**: Removed due to large amount of missing data (\>60% observations missing)
+
+-   **Removal `totalized features`**: Remove features that are summations of other features
+
+-   **Imputation of missing data with KNN:** the remaining data was imputed with K-nearestneighbors (KNN) as a way to fill in missing gaps. alternative methods include median, mean, or bag imputations but it was determed that KNN provides the best results with minimal effect on computational effort.
+
+-   **Numeric to Factor Conversions**: Several variables were with low distribution were converted into classes based on their categorical nature displayed in the histograms presented in the `Data Exploration` section. This conversion was made to all variables in the dataset except for `Age`, `ADHD.Total`, and `MD.Total`.
+
+-   **Dummifying Variables**: Newly transformed categorical variables were binarized into 0/1. This is particularly important for k-means because k-means will not be able to distinguish the eucliiand distances properly between classes that span more than 2 categories. For example a feature with categories 1,2,3 will not properly be computed in k-means because 1,3 will measure greater distances than 1,2, thus binarizing each of these categories such that for example 3 would be its own column with 0/1 for presence/absence is absolutely necessary.
+
+-   **Normalization (model dependent)**: Again, due to the euclidian nature of k-means clustering, features need to be normalized such that the distances they are centered and scaled the mean is 0 and the Stdev is 1, this scales all the data to allow kmeans to appropriately place centroids and observations at appropriate distances.
+
+-   **Colinearity test**: Colinearity was tested and it was determined that there was not sufficient colinearity between any variables such that they needed to be removed for this reason alone.
+
+-   **Removed low-variance features**: Removing any extremely low-variance data that will not provide useful data to the model and will only contribute to noise. At first glance, From `Data Exploration` section `Stimulants` seems like a low-variance variable with majority of categories recorded at 0. This will be confirmed statistically with tidymodels. Based on the model adjustment below, there were many features that were too sparse to provide valuable information to the model that including but not limited to: `Race_X3`, `Race_X6`, `ADHD_Q5_X5`, `Alcohol_X0.6` and more. The total amount of features used in model after removing sparse parameters went from 238 to 147 The model recipe is shown below.
+
+```{r}
+
+ADHD_Recipe<-ADHD_data %>% recipe(~.) %>% 
+  step_rm(Initial, Psych_meds.) %>% 
+  step_rm(contains("total")) %>% 
+  step_impute_knn(all_predictors()) %>% 
+  step_mutate_at(-Age, fn = ~ as.factor(.)) %>% 
+  step_dummy(all_nominal(), one_hot = T) %>% 
+  step_normalize(all_predictors()) %>%
+  step_nzv(all_predictors()) %>% 
+  step_corr(all_predictors()) %>% 
+  prep() #%>% 
+
+ADHD_Recipe 
+
+
+```
+
+After applying all those data transformations to the ADHD data, the following table was produced with 147 variables and 175 observations of those variables.
+
+```{r}
+
+ADHD_Cleaned<- ADHD_Recipe %>%  bake(ADHD_data)
+
+```
+
+
+
+References:
