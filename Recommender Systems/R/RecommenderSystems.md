@@ -4,10 +4,14 @@ Want to Hear A Joke?
 
 ## Outline:
 
-[Recommender System](#Recommender-System)  
-[Dataset Setup](#Dataset-and-Setup)
-[Dataset Setup](#Process-and-Goal)
-## Recommender System
+- [Recommender Systems](#Recommender-Systems)  
+- [Dataset Setup](#Dataset-and-Setup)  
+- [Implementation](#Process-and-Goal)  
+- [Evaluating Recommenders](#Evaluating-Recommenders)
+- [Most Recommended Jokes](#Most-Recommended-Jokes)
+
+
+## Recommender Systems
 
 Skip to the end for spoiler on most recommended jokes. This document
 will present a high-level overview on the implementation of recommender
