@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, echo = FALS
 
 ## Recommender System
 
+[RMarkdown Source Code](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Clustering/Clustering.Rmd)
+
 Skip to the end for spoiler on most recommended jokes. This document will present a high-level overview on the implementation of recommender systems. The recommender systems that will be evaluated in this document are:
 
 1. **Item-Based Collaborative Filtering (IBCF)**
