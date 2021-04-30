@@ -1,4 +1,4 @@
-Dimensionality
+Cluster Analysis with R
 ================
 Author - Joshua Registe
 
