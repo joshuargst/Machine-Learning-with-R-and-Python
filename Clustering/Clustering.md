@@ -10,7 +10,6 @@ Author - Joshua Registe
 -   [Implementing K-means](#K-means)
 -   [Implementing K-mediods](#K-mediods)
 -   [Implementing Hierarchical Clustering](#Hierarchical-Clustering)
--   [Data Dictionary](#Data-Dictionary)
 -   [References](#References)
 
 ## Clustering
@@ -370,7 +369,7 @@ those variables.
 ADHD_Cleaned<- ADHD_Recipe %>%  bake(ADHD_data)
 ```
 
-\#\#K-means
+##K-means
 
 -   [Return to Outline](#Outline)
 
@@ -481,6 +480,8 @@ gridExtra::grid.arrange(A2,A3,A4,A5,A6,A7, ncol = 3)
 
 ## Hierarchical Clustering
 
+-   [Return to Outline](#Outline)
+  
 Hierarchical is the next and final algorithm that is tested using the
 same transformed ADHD dataset. Two options are typically explored for
 the distances calculated in k-mediods, `euclidian` and `manhattan`. We
