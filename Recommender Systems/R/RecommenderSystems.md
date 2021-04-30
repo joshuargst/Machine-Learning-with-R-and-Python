@@ -12,7 +12,8 @@ Want to Hear A Joke?
 
 
 ## Recommender Systems
-- [Outline](#Outline)  
+[Return to Outline](#Outline)  
+  
 Skip to the end for spoiler on most recommended jokes. This document
 will present a high-level overview on the implementation of recommender
 systems. The raw code for this document can be found here: [RecommenderSystems.Rmd](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Recommender%20Systems/R/RecommenderSystems.Rmd). The recommender systems that will be evaluated in this document are:
@@ -58,7 +59,8 @@ systems. The raw code for this document can be found here: [RecommenderSystems.R
         second factor matrix.
 
 ## Dataset and Setup
-- [Outline](#Outline)  
+[Return to Outline](#Outline)  
+  
 The following assignment dives into the use of recommender systems via
 the r package `recommenderlab`. the vignette for this library can be
 <a href="https://cran.r-project.org/web/packages/recommenderlab/vignettes/recommenderlab.pdf">
@@ -102,7 +104,8 @@ the jokes which follows a normal distribution with a mode between 1 and
 <img src="RecommenderSystems_files/figure-gfm/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
 
 ### Process and Goal
-- [Outline](#Outline)  
+[Return to Outline](#Outline)  
+  
 <br> The dataset will use cross validations and will be split into
 train/test datasets at a 80/20 ratio. The number of recommendations made
 to each user will be specified as 10. This parameter will be tweaked
@@ -114,7 +117,8 @@ slightly decreases recommendation accuracy than when using 0, however it
 makes for better quality recommendations.
 
 #### Setting Model Parameters and Cross-Validation Data
-- [Outline](#Outline)  
+[Return to Outline](#Outline)  
+  
 The following presents the constants used in across all recommender
 systems. For simplicity, these parameters will not be tuned in this
 discussion. Three datasets are used, `rec_train` to train our model from
@@ -144,7 +148,8 @@ recc_unknown<-getData(eval_sets,'unknown')
 ```
 
 #### Evaluating Recommenders
-- [Outline](#Outline)  
+[Return to Outline](#Outline)  
+  
 Evaluating the recommenders, we will calculate our root mean square
 error (RMSE) for each model. For the collaborative models (UBCF and
 IBCF), we are using 3 different methods: `pearson`, `jaccard`, and
@@ -295,7 +300,8 @@ performing the best amongst all of the different methods.
 <img src="RecommenderSystems_files/figure-gfm/unnamed-chunk-8-1.png" style="display: block; margin: auto;" />
 
 ### Most Recommended Jokes?
-- [Outline](#Outline)  
+[Return to Outline](#Outline)  
+   
 And finally, to see the top jokes from some of our recommender models we
 can match the jokeID to the Jester5k dataset and extract the jokes. The
 following provides a table of 5 jokes from a few models. Based one of
