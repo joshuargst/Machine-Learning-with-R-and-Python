@@ -1,7 +1,6 @@
 ---
 title: "Dimensionality"
-author: "Joshua Registe"
-date: "4/29/2021"
+author: "Author - Joshua Registe"
 output: github_document
 ---
 
@@ -10,14 +9,19 @@ knitr::opts_chunk$set(
   echo = TRUE, 
   warning = FALSE, 
   message = FALSE,
-  cache = TRUE)
+  cache = TRUE,
+   echo = FALSE)
 
 packages <- c(
   'tidyverse', 
   'corrplot', 
   'naniar',
   'DataExplorer',
-  'tidymodels'
+  'tidymodels',
+  'tidytext',
+  'discrim',
+  'MASS',
+  'conflicted'
 )
      
 for (pkg in packages) {
@@ -27,14 +31,32 @@ for (pkg in packages) {
       warn.conflicts = FALSE, quietly = TRUE)
   ))
 }
-
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
 # A ggplot2 function
 defaulttheme <- theme(
   panel.background = element_blank(),
   panel.border = element_rect(color = "black", fill = NA))
 ```
 
-## Dimensionality
+
+
+## Outline
+
+[RMarkdown Source Code](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Clustering/Clustering.Rmd)  
+
+- [Dimenstionality Intro](#Dimensionality Introduction)  
+- [Data Exploration](#Data-Exploration)  
+- [Data Prep](#Data-Preparation)  
+- [Implementing Principal Component Analysis](#Principal-Component-Analysis)
+- [Implementing Partial Least Squares](#Partial-Least_Squares)
+- [Implementing Linear Discriminant Analysis](#Linear-Discriminant-Analysis)
+- [References](#References)
+
+
+## Dimensionality Introduction
+
+- [Return to Outline](#Outline)  
 
 The following document will discuss some processes of dimensionality reduction for datasets. **Why Reduce dimensions?** There are many benefits to reducing the dimensionality of a dataset including:  
 
@@ -46,33 +68,26 @@ The following document will discuss some processes of dimensionality reduction f
 
 - Interpretation and Visualization  
 
-- Easier storage and processing of the data
+- Easier storage and processing of the data along with faster processing time
 
+The *curse of dimensionality* occurs when working with highly dimensional data where issues will begin manifest themselves in several aspects. Data will become increasingly difficult to visualise and interpret. Modeling such data will lead to inefficient compute times and will also lead to overtraining. As more dimensions are introduced, the data becomes more sparse in terms of rows/column and models will have a difficult time making generalizations that can be used for accurate predictions. The figure below shows an example of how dimensions typically affect model performance.
+
+![Top Recommended Jokes](C:/Users/REGISTEJH/Documents/GitHub/Machine-Learning with R and Python/Dimensionality/R/Dimensionality_files/figure-gfm/dim_example.png)
 
 The dimensionality reduction techniques presented in this document will showcase the implementation of:
 
 
-**1. Singular Value Decomposition**
+**1. Principal Component Analysis (PCA)**
 
-**2. Principal Component Analysis**
+**2. Partial Least Squares (PLS)**
 
-**3. Independent Component Analysis**
-
-**4. Partial Least Squares**
-
-**5. Linear Discriminant Analysis**
-
-
-## Data Exploration
-
-
-The first thing we will do for this assignment is explore the dataset provided. This dataset is a mental health dataset from a real-life research project. All identifying information of the dataset was removed and the data dictionary provides an explanation of each of the variables. The data contains 54 variables with 175 observations per variable. Every variable in the dataset is imported in as numeric features with the exception of `Initial` which will not be used as part of any exploration or analysis.
+**2. Linear Discriminant Analysis (LDA)**
 
 
 ## Data Exploration
 
 - [Return to Outline](#Outline)  
-  
+
 The Data set being explored in this document a survey used to assess Attention deficit hyper activity disorder (ADHD). The dataset consist of information about patients as well as survey questions that attempt to segment users into those that are likely or not-likely to have ADHD. The data dictionary is presented below.  
   
 C:  Sex:  Male-1, Female-2  
@@ -90,18 +105,28 @@ AZ Non-substance-related Dx: 0 – none; 1 – one; 2 – More than one
 BA Substance-related Dx: 0 – none; 1 – one Substance-related; 2 – two; 3 – three or more  
 BB Psychiatric Meds: 0 – none; 1 – one psychotropic med; 2 – more than one psychotropic med  
   
-This dataset is a mental health dataset from a real-life research project. All identifying information of the dataset is removed. The data contains 54 variables with 175 observations per variable. Every variable in the dataset is imported in as numeric features with the exception of `Initial` which will not be used as part of any exploration or analysis. Below 
+This dataset is a mental health dataset from a real-life research project. All identifying information of the dataset is removed. The data contains 54 variables with 175 observations per variable. Every variable in the dataset is imported in as numeric features with the exception of `Initial` which will not be used as part of any exploration or analysis. For brevity, only the non-survey questions are shown in the summary below, however, all information including survey questions are used in analysis. View Rmarkdown code to see unhidden descriptive statistics. 
 
 ```{r}
 ADHD_data<-read_csv("ADHD_data.csv")
 names(ADHD_data)<-str_replace_all(names(ADHD_data)," +","_")
 names(ADHD_data)<-str_replace_all(names(ADHD_data),"-","_")
-skimr::skim(ADHD_data)
+
+ADHD_data %>%
+  select(-tidyselect::contains("ADHD")) %>% 
+  select(-tidyselect::contains("MD")) %>% 
+  skimr::skim()
+```
+```{r, include = FALSE}
+#Use following script to see entire distribution
+ADHD_data %>%
+  skimr::skim()
 ```
 
-After observing the data's structure, the next step was to plot the data to assess how this data is portrayed and what observations we can make about the distributions involved in the dataset. Based on the histrograms plotted below, we can note that there are many observations although numeric, behave as categorical features and this will need to be assessed when performing the kmeans clustering analysis. There does not seem to be any clear distinguishable outliers however there does seem to be some features that experience low variance such `Stimulants` where majority of the recorded observations are 0.
 
-To reduce noise and complexity of the dataset prior to modeling, multi-colinearity (if it exists) should be addressed. The dataset was assessed for pairwise spearman correlations which measures data for it's monotonicity providing a regression coefficient that defines both linear and non-linear trends. the table below shows we do exhibit correlations particularly amongst features that are directly related such as the `ADHDQ#` to the `ADHD_Total`. Highest measured spearman rank was around 0.79.
+After observing the data's structure, the next step was to plot the data to assess how this data is portrayed and what observations we can make about the distributions involved in the dataset. Based on the histrograms plotted below, we can note that there are many observations although numeric, behave as categorical features and this will need to be assessed when performing the dimensionality reductions because they typically work on normalized numeric data. There does not seem to be any clear distinguishable outliers however there does seem to be some features that experience low variance such `Stimulants` where majority of the recorded observations are 0. 
+
+To reduce noise and complexity of the dataset prior to modeling, multi-colinearity (if it exists) should be addressed. The dataset was assessed for pairwise spearman correlations which measures data for it's monotonicity providing a regression coefficient that defines both linear and non-linear trends. Dimensionality reduction techniques are capable of identify colinearity and aggregating features, however removing highly relational information can help reduce noise in the dataset and better focus the dimension reduction processes. The table below shows we do exhibit correlations particularly amongst features that are directly related such as the `ADHDQ#` to the `ADHD_Total`. Highest measured spearman rank was around 0.79.
 
 ```{r}
 NumericADHD<-ADHD_data %>% 
@@ -146,60 +171,10 @@ ADHD_data %>%  naniar::miss_var_summary() %>%
        x = "Feature")
 ```
 
-Assessing correlations will be important for the models to come because some dimensionality reduction techniques such as PCA are particularly sensitive to multi-colinearity and in order to reduce noise and complexity of the dataset prior to modeling, multi-colinearity (if it exists) should be addressed. The dataset was assessed for pairwise spearman correlations which measures data for it's monotonicity providing a regression coefficient that defines both linear and non-linear trends. the table below shows we do exhibit correlations particularly amongst features that are directly related such as the `ADHDQ#` to the `ADHD_Total`. Highest measured spearman rank was around 0.79.
 
-```{r}
-NumericADHD<-ADHD_data %>% 
-  select(-Initial)
+## Data Preparation 
 
-ADHD_cors<-
-  bind_rows(
-    #pearson correlation of numeric features
-    NumericADHD %>% 
-      cor(method = "pearson", use = "pairwise.complete.obs") %>% as.data.frame() %>% 
-      rownames_to_column(var = "x") %>% 
-      pivot_longer(cols = -x, names_to = "y", values_to = "correlation") %>% 
-      mutate(cor_type = "pearson"),
-    #spearman (monotonic) correlations of numeric features
-    NumericADHD %>% 
-      cor(method = "spearman", use = "pairwise.complete.obs") %>% as.data.frame() %>% 
-      rownames_to_column(var = "x") %>% 
-      pivot_longer(cols = -x, names_to = "y", values_to = "correlation") %>% 
-      mutate(cor_type = "spearman")
-  )
-
-ADHD_cors %>% 
-  filter(!(x ==y)) %>% 
-  filter(cor_type=="spearman") %>% 
-  distinct(correlation,.keep_all = T) %>% 
-  arrange(-correlation) %>% #top_n(10, correlation) %>% 
-  distinct(x, .keep_all = T) %>% 
-  head()
-
-  
-```
-
-Next, we want to assess any missing data within the dataset. The models presented here are also susceptible to missing data and this must be treated accordingly. The figure below displays a plot of missing data by percentage of observations in the dataset. It is clear that the feature `Psych_meds.` has a significant amount of features that are inappropriate to impute or include and thus this feature will be removed from the dataset prior to any models.
-
-```{r}
-
-ADHD_data %>%  naniar::miss_var_summary() %>% 
-  slice_max(n_miss, n = 5) %>% 
-  ggplot(aes( x = fct_reorder(variable, n_miss), y = pct_miss))+
-  coord_flip()+
-  geom_col(alpha = 0.5, fill = "skyblue3", color = "darkblue")+
-  defaulttheme+
-  labs(title = "Top Features with Missing Data",
-       y = "Percent Missing",
-       x = "Feature")
-
-
-
-```
-
-
-
-## Data preparation 
+- [Return to Outline](#Outline)  
 
 For the Data preparation following baseline steps were made and the reasons are provided below
 
@@ -221,9 +196,10 @@ For the Data preparation following baseline steps were made and the reasons are 
 
 -   **Removed low-variance features**: Removing any extremely low-variance data that will not provide useful data to the model and will only contribute to noise. At first glance, From `Data Exploration` section `Stimulants` seems like a low-variance variable with majority of categories recorded at 0. This will be confirmed statistically with tidymodels. Based on the model adjustment below, there were many features that were too sparse to provide valuable information to the model that including but not limited to: `Race_X3`, `Race_X6`, `ADHD_Q5_X5`, `Alcohol_X0.6` and more. The total amount of features used in model after removing sparse parameters went from 238 to 147 The model recipe is shown below.
 
+
 ```{r}
 
-ADHD_Recipe<-ADHD_data %>% recipe(~.) %>% 
+Base_ADHD_Recipe<-ADHD_data %>% recipe(Suicide~.) %>% 
   step_rm(Initial, Psych_meds.) %>% 
   step_rm(contains("total")) %>% 
   step_naomit(Suicide) %>% 
@@ -232,22 +208,33 @@ ADHD_Recipe<-ADHD_data %>% recipe(~.) %>%
   step_dummy(all_nominal(), -Suicide, one_hot = T) %>% 
   step_normalize(all_numeric()) %>%
   step_nzv(all_numeric()) %>% 
-  step_corr(all_numeric()) %>% 
-  step_pca(all_numeric()) %>% 
-  prep() #%>% 
-ADHD_Recipe 
-ADHD_Cleaned<- ADHD_Recipe %>%  bake(ADHD_data)
+  step_corr(all_numeric()) #
 
-
-ADHD_data$Suicide
-ADHD_Cleaned
+ADHD_Cleaned<-Base_ADHD_Recipe %>% prep() %>% bake(ADHD_data)
 ```
 
+## Principal Component Analysis
 
-```{r, fig.width=6}
+- [Return to Outline](#Outline)  
 
-sdev <- ADHD_Recipe$steps[[10]]$res$sdev
-ADHD_Recipe$steps[[1]]	
+Principal Component Analysis (PCA) will be the first implementation of dimensionality reduction in this document. This methodology aims to describe majority of the variance in a dataset through standardizing the continous values (z-scores), computing the covariance matrix and computing eigenvectors and eigenvalues to identify the principal components. The eiven values are ranked by best descriptors and each successive principal component describes less and less of the data.
+
+```{r}
+PCA_Recipe<- Base_ADHD_Recipe %>% 
+  step_pca(all_numeric()) %>% 
+  prep()
+
+PCA_Recipe
+PCA_Cleaned<- PCA_Recipe %>%  bake(ADHD_data)
+
+
+```
+After running PCA based on the recipe defined above, we can visualize how much of the dataset is explained by the principal components. the figure below shows how the curve tapers off. The determination of how many principal components to use for a model will depend on the end goal, performance requirements, and computational limitations.
+
+
+```{r, fig.width=6, fig.height=2.5}
+PCA_eval<-PCA_Recipe$steps[[10]]
+sdev <- PCA_eval$res$sdev
 percent_variation <- sdev^2 / sum(sdev^2)
 
 var_df <- data.frame(PC=as.numeric(paste0(1:length(sdev))),
@@ -264,31 +251,253 @@ var_df %>%
        y = "Variance Explaned",
        x = "Number of Components")
 
-ADHD_Cleaned %>% 
-  ggplot(aes(PC1, PC2)) +
-  geom_point(aes(color = Suicide), alpha = 0.7, size = 2)+
-  labs(title="PCA from tidymodels")
+```
+  
 
-ADHD_Cleaned %>% 
-  ggplot(aes(PC1, PC2)) +
-  geom_boxplot(aes(color = Suicide), alpha = 0.7, size = 2)+
-  labs(title="PCA from tidymodels")
+```{r, fig.height=20, include = FALSE}
 
-DataExplorer::plot_boxplot(ADHD_Cleaned, by = "Suicide")
+tidy(PCA_eval) %>%
+  filter(component %in% paste0("PC", 1:5)) %>%
+  mutate(component = fct_inorder(component)) %>%
+  ggplot(aes(value, terms, fill = terms)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~component, nrow = 1) +
+  labs(y = NULL)+
+  defaulttheme
+
+
+```
+  
+PCA does not aim to describe a particular prediction, only the overall variance of a dataset. In later dimensionality reduction methods, this document will explore if we can predict `Suicide` based on the information provided in the `ADHD_dataset`. Below shows a scatter matrix of the first principal components and described by whether or not the patient was suicidal. Since PCA does not aim to predict this, there are no clear distinctions, however this dimensionally reduced dataset can be used in a predictive model that might capture this information.
+
+
+
+```{r, fig.width=7, fig.height=5}
+GGally::ggpairs(PCA_Cleaned, progress = F, aes(color = Suicide))+ theme_bw()
 ```
 
-```{r, fig.width=10, fig.height=8}
-caret::featurePlot(ADHD_Cleaned[,c(2:6)], y = ADHD_Cleaned$Suicide)
-DataExplorer::plot_correlation(ADHD_Cleaned)
-GGally::ggpairs(ADHD_Cleaned, progress = F, aes(color = Suicide))+ theme_bw()
+  
+One of the downsides of using PCA is losing explainability of a model. Once you use this technique prior to running an algorithm like random forest for example, assessing feature importance becomes increasingly vague as you no longer have the original predictors. important features will be described as principal components but these components are simply some mathematical aggregate of the original features. That said, one of the nice features about PCA computed from `tidymodels` is the ability to assess the weights of every feature to every principal component produced. The plot below shows which features are described most in each principal component. 
+ 
+ 
+```{r, results='hide'}
+
+tidy(PCA_eval) %>%
+  filter(component %in% paste0("PC", 1:9)) %>%
+  group_by(component) %>%
+  top_n(5, abs(value)) %>%
+  ungroup() %>%
+  mutate(terms = reorder_within(terms, abs(value), component)) %>%
+  ggplot(aes(abs(value), terms)) +
+  geom_col(color = "darkblue", fill = "skyblue3", alpha = 0.5) +
+  facet_wrap(~component, scales = "free_y") +
+  scale_y_reordered() +
+  defaulttheme+
+  labs(
+    x = "Absolute Value of Contribution",
+    y = NULL
+  )
+
+
+
+```
+
+## Partial Least Squares
+
+- [Return to Outline](#Outline)  
+
+
+Partial Least Squares is a popular method that is used especially in high-dimensions datasets. PLS is more robust than ordinary least squares (OLS) especially when data are colinear since PLS naturally manages this while OLS becomes very unstable. Partial least squares are like a supervised version of principal component analysis, where it aims to reduce dimensions while considering how this affects a response variable for prediction. Basically, PLS aims to reduce the dimensionality while simultaneously maximizing the correlation of the new dimensions to the response variable(s). In this case, we will continue to observe suicidal patients. 
+
+```{r}
+
+PLS_Recipe<-
+  Base_ADHD_Recipe %>% 
+  step_pls(all_numeric_predictors(), outcome = "Suicide") %>% 
+  prep()
+
+```
+
+The pre-processing that was developed prior is used and PLS is applied while trying to maximize separation of the outcome. The figure below shows the separation that we obtain with PLS after reducing the dataset into two dimensions. 
+
+```{r, fig.height=4, fig.width=6}
+
+PLS_Cleaned<-bake(PLS_Recipe, new_data = ADHD_data)
+PLS_Cleaned %>% 
+ggplot(aes(PLS1, PLS2, color = Suicide)) +
+  geom_point(alpha = 0.7, size = 2)+
+  stat_ellipse()+
+  defaulttheme
+```
+
+Similar to how we did PCA, is the features that contributed most each of the components. This provides more valuable information than the previous PCA model since predictions are being produced. The components that reduce variance and maintain predictive power include `abuse`, and `alcohol`, implying that individuals who experience abusive childhoods or alcoholism may be more susceptible to suicide. 
+
+
+```{r, fig.height=2.5}
+PLS_eval<-PLS_Recipe$steps[[10]]
+
+tidy(PLS_eval) %>%
+  filter(component %in% paste0("PLS", 1:2)) %>%
+  group_by(component) %>%
+  top_n(5, abs(value)) %>%
+  ungroup() %>%
+  mutate(terms = reorder_within(terms, abs(value), component)) %>%
+  ggplot(aes(abs(value), terms)) +
+  geom_col(color = "darkblue", fill = "skyblue3", alpha = 0.5) +
+  facet_wrap(~component, scales = "free_y") +
+  scale_y_reordered() +
+  labs(
+    x = "Absolute Value of Contribution",
+    y = NULL
+  )+
+  defaulttheme
+
 ```
 
 
 
+## Linear Discriminant Analysis
 
+- [Return to Outline](#Outline)  
+
+
+Finally, linear discriminant analysis will be the last tool used for both dimensionality reduction and producing classification predictions. This method aims to minimize the total probability of misclassifications and is often one of the initial tools used for less complex predictions. For this evaluation, we will consider both training and testing data to demonstrate the sensitivity of LDA to dimensionality. The data will be split 75/25 train/test split stratified by suicide where the original proportion of the suicidal patients are 30%.
+
+```{r, include=FALSE}
+ADHD_dataadj<-ADHD_data %>% mutate(Suicide = as.factor(Suicide)) %>% 
+  select(-tidyselect::contains("ADHD")) %>% 
+  select(-tidyselect::contains("MD")) %>% 
+DataExplorer::plot_boxplot( by = "Suicide")
+
+```
+
+
+
+```{r}
+set.seed(1)
+ADHD_split<- ADHD_Cleaned %>%
+  initial_split(strata = "Suicide")
+datatrain<-training(ADHD_split)
+datatest<-testing(ADHD_split)
+m1<-lda(Suicide~. ,data = datatrain)
+```
+Results of the LDA are shown below where you'll notice that the model is overfitting. The training set has perfect separation of the response variable while the testing dataset separates the classes worse than the original dataset with no model. This is where we will demonstrate the effects of dimensionality. 
+
+```{r, fig.height=3}
+m1.training.predictions<- m1 %>% predict(datatrain)
+m1.testing.predictions<- m1 %>% predict(datatest)
+lda.data<-
+  rbind(
+    cbind(datatrain, m1.training.predictions) %>% mutate(set = "Training Set"),
+    cbind(datatest, m1.testing.predictions) %>% mutate(set = "Testing Set")
+  ) %>% 
+  mutate(model = "LDA")
+
+
+ggplot(lda.data) + geom_boxplot(aes(LD1, colour = Suicide))+
+  defaulttheme+
+  facet_wrap(.~set, scales = "free")
+
+```
+
+As stated previously, those using LDA must be aware of the number of samples that are being used relative to the number of features (predictors) in the dataset. LDA will have less focused prediction when combining too many features onto a single plane (one linear discriminant component). Because of this, we will test predictions on LDA using a decreased number of planes up to the max. The descriptors added will be sorted based on the the PLS analysis determination of feature importance. Highly predictive features from the partial least squares evaluation is used as a sorting mechanism to sequentially add from most predictive to least predictive. 
+
+The plot below clearly demonstrates the curse of dimensionality where our model begins to suffer in accuracy after around 40 predictors. 
+
+```{r}
+imp_terms<-
+tidy(PLS_eval) %>%
+  filter(component %in% paste0("PLS", 1:2)) %>% #get pls components
+  group_by(component) %>% # group by component
+  #top_n(20, abs(value)) %>%  # obtain top 5 of every group
+  ungroup() %>% #remove grouping
+  arrange(-abs(value)) %>%  #sort by absolute value (top to bottom)
+  distinct(terms) %>%  #get all distinct terms in-case of duplicates
+  pull(terms)
+
+
+
+```
+
+```{r}
+
+lda.final<-data.frame()
+for( i in 2:length(imp_terms)){
+  
+  imp_adj<-imp_terms[2:i]
+  
+  datatrain<-training(ADHD_split)%>% 
+    dplyr::select(Suicide,imp_adj) 
+  
+  datatest<-testing(ADHD_split)%>% 
+    dplyr::select(Suicide,imp_adj)
+  
+  m1<-lda(Suicide~. ,data = datatrain)
+  
+  m1.training.predictions<- m1 %>% predict(datatrain)
+  m1.testing.predictions<- m1 %>% predict(datatest)
+  
+  lda.data<-
+    rbind(
+      cbind(datatrain, m1.training.predictions) %>% mutate(set = "Training Set"),
+      cbind(datatest, m1.testing.predictions) %>% mutate(set = "Testing Set"))  %>% 
+    mutate(model = paste0(i," predictors"),
+           modelindex = i)
+  
+  lda.final<-bind_rows(lda.data,lda.final)
+}
+
+
+```
+
+
+```{r, fig.height=3}
+lda.final %>% group_by(set, model, modelindex) %>% 
+  yardstick::metrics(truth = Suicide, estimate = class) %>% 
+  filter(.metric =="accuracy") %>% 
+  ungroup() %>% 
+  arrange(-.estimate) %>% 
+  ggplot(aes(x = modelindex, y = .estimate, color = set))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(.~set)+
+  labs(x = "Number of Predictors Used",
+       y = "Accuracy")+
+  scale_x_continuous(breaks = seq(0,140,20))+
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "top",
+        legend.title = element_blank(),
+        panel.border = element_rect(color = "black", fill = NA),
+        panel.grid.major.x = element_line(color = "grey90"))
+  
+```
+
+Looking around the peak of where data dimensionality can be useful to understaning the separation between the two classes. The figure below shows this separation by the number of predictors for both the training the the testing dataset from 10 predictors to 60 predictors. Although 30 and 40 predictors have comparable accuracies, better separation seems to be present on the testing set with 30 predictors (this is likely due to the influence of the majority class).
+
+```{r, fig.height=6}
+ lda.final %>% 
+  filter(modelindex %in% seq(10,60,10)) %>% 
+ggplot() + geom_boxplot(aes(LD1, colour = Suicide))+
+  defaulttheme+
+  facet_grid(model~set, scales = "free")
+
+
+```
+
+Further evaluation on these models would need to be considered to assess the confusion matrices and their true positive and false positive rates. This would provide further insight into the model's performance on the minority class (suicidal, 30% presence in original dataset) vs the majority (non-suicidal, 70% in original dataset).
 
 
 References:
 
+- [Return to Outline](#Outline)  
 
 <https://cmdlinetips.com/2020/06/pca-with-tidymodels-in-r/>
+
+<https://juliasilge.com/blog/cocktail-recipes-umap/>
+
+<https://builtin.com/data-science/step-step-explanation-principal-component-analysis>
+
+<http://appliedpredictivemodeling.com/>
+
+<https://sebastianraschka.com/Articles/2014_python_lda.html#principal-component-analysis-vs-linear-discriminant-analysis>
