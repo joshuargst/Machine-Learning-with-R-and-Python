@@ -9,6 +9,6 @@ Recommender Systems:
 Clustering:  
 :control_knobs: - [Clustering with R](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Clustering/Clustering.md)
 
-Clustering:  
+Dimensionality:  
 :label: - [Dimensionality with R](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Dimensionality/R/Dimensionality.md)
 
