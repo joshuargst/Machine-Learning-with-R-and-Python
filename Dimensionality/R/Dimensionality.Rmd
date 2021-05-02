@@ -43,13 +43,13 @@ defaulttheme <- theme(
 
 ## Outline
 
-[RMarkdown Source Code](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Clustering/Clustering.Rmd)  
+[RMarkdown Source Code](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Dimensionality/R/Dimensionality.Rmd)  
 
-- [Dimenstionality Intro](#Dimensionality Introduction)  
+- [Dimenstionality Intro](#Dimensionality-Introduction)  
 - [Data Exploration](#Data-Exploration)  
 - [Data Prep](#Data-Preparation)  
 - [Implementing Principal Component Analysis](#Principal-Component-Analysis)
-- [Implementing Partial Least Squares](#Partial-Least_Squares)
+- [Implementing Partial Least Squares](#Partial-Least-Squares)
 - [Implementing Linear Discriminant Analysis](#Linear-Discriminant-Analysis)
 - [References](#References)
 
@@ -81,7 +81,7 @@ The dimensionality reduction techniques presented in this document will showcase
 
 **2. Partial Least Squares (PLS)**
 
-**2. Linear Discriminant Analysis (LDA)**
+**3. Linear Discriminant Analysis (LDA)**
 
 
 ## Data Exploration
@@ -488,7 +488,7 @@ ggplot() + geom_boxplot(aes(LD1, colour = Suicide))+
 Further evaluation on these models would need to be considered to assess the confusion matrices and their true positive and false positive rates. This would provide further insight into the model's performance on the minority class (suicidal, 30% presence in original dataset) vs the majority (non-suicidal, 70% in original dataset).
 
 
-References:
+## References:
 
 - [Return to Outline](#Outline)  
 

@@ -5,14 +5,14 @@ Author - Joshua Registe
 ## Outline
 
 [RMarkdown Source
-Code](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Clustering/Clustering.Rmd)
+Code](https://github.com/joshuargst/Machine-Learning-with-R-and-Python/blob/main/Dimensionality/R/Dimensionality.Rmd)
 
--   [Dimenstionality Intro](#Dimensionality%20Introduction)  
+-   [Dimenstionality Intro](#Dimensionality-Introduction)  
 -   [Data Exploration](#Data-Exploration)  
 -   [Data Prep](#Data-Preparation)  
 -   [Implementing Principal Component
     Analysis](#Principal-Component-Analysis)
--   [Implementing Partial Least Squares](#Partial-Least_Squares)
+-   [Implementing Partial Least Squares](#Partial-Least-Squares)
 -   [Implementing Linear Discriminant
     Analysis](#Linear-Discriminant-Analysis)
 -   [References](#References)
@@ -59,7 +59,7 @@ showcase the implementation of:
 
 **2. Partial Least Squares (PLS)**
 
-**2. Linear Discriminant Analysis (LDA)**
+**3. Linear Discriminant Analysis (LDA)**
 
 ## Data Exploration
 
@@ -402,7 +402,7 @@ This would provide further insight into the model’s performance on the
 minority class (suicidal, 30% presence in original dataset) vs the
 majority (non-suicidal, 70% in original dataset).
 
-References:
+## References:
 
 -   [Return to Outline](#Outline)
 
