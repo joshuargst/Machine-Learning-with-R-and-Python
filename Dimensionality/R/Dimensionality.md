@@ -49,8 +49,7 @@ difficult time making generalizations that can be used for accurate
 predictions. The figure below shows an example of how dimensions
 typically affect model performance.
 
-![Top Recommended
-Jokes](C:/Users/REGISTEJH/Documents/GitHub/Machine-Learning%20with%20R%20and%20Python/Dimensionality/R/Dimensionality_files/figure-gfm/dim_example.png)
+![Top Recommended Jokes](C:/Users/REGISTEJH/Documents/GitHub/Machine-Learning%20with%20R%20and%20Python/Dimensionality/R/Dimensionality_files/figure-gfm/dim_example.png)
 
 The dimensionality reduction techniques presented in this document will
 showcase the implementation of:
